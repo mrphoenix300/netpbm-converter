@@ -104,4 +104,3 @@ It represents my first experience in C programming applied to a real-world probl
 image processing directly on the **Netpbm format**.
 
 **MrPhoenix300**
-```
