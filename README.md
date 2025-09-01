@@ -1,6 +1,6 @@
 # figproc – Netpbm Image Converter
 
-This project was developed as part of the **"Introduction to Programming"** course (1st semester, University of Athens, 2022–2023).  
+This project was developed as part of the **"Introduction to Programming"** course.  
 The goal was to implement basic image processing operations in **C**, working directly with the **Netpbm format** (P1–P6).
 
 ---
