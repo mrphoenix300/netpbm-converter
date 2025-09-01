@@ -98,8 +98,10 @@ As an extension, the program could also support conversions between **binary ↔
 
 ## 👨‍💻 Author
 
-Developed by **Thanasis Angelis (Nemesis-Null)**
-Department of Informatics & Telecommunications,
-National and Kapodistrian University of Athens.
+This project was originally developed during my **first semester at the university** as 
+part of the course *Introduction to Programming*.  
+It represents my first experience in C programming applied to a real-world problem: implementing 
+image processing directly on the **Netpbm format**.
 
+**MrPhoenix300**
 ```
