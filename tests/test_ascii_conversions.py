@@ -33,9 +33,6 @@ class ASCIIConversionTests(unittest.TestCase):
         if cls.temp is not None:
             cls.temp.cleanup()
 
-    def tearDownClass(cls):
-        cls.temp.cleanup()
-
     def convert(self, data):
         return subprocess.run([str(self.binary)], input=data,
                               capture_output=True, timeout=2)
