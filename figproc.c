@@ -11,11 +11,9 @@ int header(int base);
 
 int main(void)
 {
-	int ch;
     unsigned int luminosity;
     int grey;
     int magic_number=0;
-    unsigned int red,blue,green;
     int max_val;
     unsigned int color;
     int i,j,height,width;
@@ -54,45 +52,46 @@ int main(void)
     {
         printf("%d\n",max_val);
     }
-	if (magic_number=='3')
-	{
-		/* converts a ppm (P3) to pgm (P2) file */
-	    ch=getchar();
-		while (ch!=EOF)
-		{
-			/* converts one color pixel at a time to grayscale until the input file is finished */
-		   	ungetc(ch, stdin);
-		    red=getinteger(10);
-			green=getinteger(10);
-			blue=getinteger(10);
-			luminosity=(299*red+587*green+114*blue)/1000;
-			printf("%d",luminosity);
-			putchar(32);
-			ch=getchar();
-		}
-	}
-	else if (magic_number=='2')
-	{
-		/* converts a pgm (P2) to pbm (P1) file */
-	    ch=getchar();
-	    while (ch!=EOF)
-	    {
-	    	/* converts one grayscale pixel at the time to white-black untill the input file is finished */
-	    	ungetc(ch, stdin);
-	    	grey=getinteger(10);
-	    	if (grey>(max_val+1)/2)
-	    	{
-	    	    putchar('0');
-	    		putchar(32);
-	    	}
-	    	else
-			{ 
-	    		putchar('1');
-	    		putchar(32);
-	    	}
-	    	ch=getchar();
-		}
-	}
+    if (magic_number=='3')
+    {
+        /* P3 (ASCII RGB) to P2 (ASCII grayscale). */
+        for (j=0; j<height; j++)
+        {
+            for (i=0; i<width; i++)
+            {
+                int r=getinteger(10);
+                int g=getinteger(10);
+                int b=getinteger(10);
+                if (r<0 || g<0 || b<0 ||
+                    r>max_val || g>max_val || b>max_val)
+                {
+                    fprintf(stderr, "Invalid or truncated P3 pixel data\n");
+                    return 1;
+                }
+                luminosity=(unsigned int)((299ULL*(unsigned int)r+
+                    587ULL*(unsigned int)g+114ULL*(unsigned int)b)/1000ULL);
+                printf("%u%c",luminosity,i==width-1?'\n':' ');
+            }
+        }
+    }
+    else if (magic_number=='2')
+    {
+        /* P2 (ASCII grayscale) to P1 (ASCII bitmap). */
+        for (j=0; j<height; j++)
+        {
+            for (i=0; i<width; i++)
+            {
+                grey=getinteger(10);
+                if (grey<0 || grey>max_val)
+                {
+                    fprintf(stderr, "Invalid or truncated P2 pixel data\n");
+                    return 1;
+                }
+                putchar(grey>(max_val+1)/2 ? '0' : '1');
+                putchar(i==width-1?'\n':' ');
+            }
+        }
+    }
 	else if (magic_number=='6')
 	{
 		/* P6 (binary RGB) to P5 (binary grayscale).
