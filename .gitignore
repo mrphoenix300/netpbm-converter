@@ -1,0 +1,14 @@
+# Compiled executables and build output
+/build/
+/figproc
+/figproc_sanitized
+/figproc_ubsan
+
+# Python test caches
+__pycache__/
+*.py[cod]
+
+# Local editor and OS files
+.vscode/
+.idea/
+.DS_Store
