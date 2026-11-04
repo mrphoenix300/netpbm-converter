@@ -114,34 +114,33 @@ int main(void)
 	}
 	else if (magic_number=='5')
 	{
-		/* converts a pgm (P5) to pbm (P4) file */
-		ch=getchar();
-		while (ch!=EOF)
+		/* P5 (8-bit grayscale) to P4 (packed binary bitmap).
+		 * Each row starts at a new byte; unused low bits are zero. */
+		if (max_val > 255)
+		{
+			fprintf(stderr, "16-bit P5 samples are not supported\n");
+			return 1;
+		}
+		for (j=0; j<height; j++)
 		{
 			color=0;
-			for (bit=0; bit<8; bit++) /* packs 8 pixels at a time */
+			for (i=0; i<width; i++)
 			{
-				color<<=1; /* raise the color with 0 for a white pixel */
-				if (ch<=(max_val+1)/2)
-					color|=1; /* raise the color with 1 for a black pixe; */
-				ch=getchar();
-				if (ch==EOF)
-					break;
-			}
-			putchar(color);
-			if (width%8!=0) /* in case the width is not a multiple of 8 add one bit */
-			{
-				color=0;
-				for (i=0; i<width%8; i++)
+				int sample=getchar();
+				if (sample==EOF)
 				{
-	                ch=getchar();
-	                color<<=1;
-	                if (ch<=(max_val+1)/2)
-	                    color|=1;
+					fprintf(stderr, "Truncated P5 pixel data\n");
+					return 1;
 				}
-				color<<=8-width%8;
-				putchar(color);
+				color=(color<<1) | (sample<=(max_val+1)/2 ? 1u : 0u);
+				if (i%8==7)
+				{
+					putchar((int)color);
+					color=0;
+				}
 			}
+			if (width%8!=0)
+					putchar((int)(color << (8-width%8)));
 		}
 	}
 }
