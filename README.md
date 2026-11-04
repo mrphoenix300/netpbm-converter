@@ -1,106 +1,103 @@
-# figproc – Netpbm Image Converter
+# Netpbm Image Converter (figproc)
 
-This project was developed as part of the **"Introduction to Programming"** course.  
-The goal was to implement basic image processing operations in **C**, working directly with the **Netpbm format** (P1–P6).
+A lightweight **C command-line image converter** developed originally for the *Introduction to Programming* university course and subsequently improved with input validation and automated regression tests.
 
----
+The program reads an image from **standard input** and writes the converted image to **standard output**. The input magic number determines the conversion automatically.
 
-## 📌 Project Description
+## Supported conversions
 
-The program `figproc.c` reads an image from **standard input** and writes the converted image to **standard output**.  
-It supports conversions between **color, grayscale, and black & white** images, depending on the input format:
+| Input | Output | Description |
+| --- | --- | --- |
+| P3 (ASCII PPM) | P2 (ASCII PGM) | RGB to grayscale |
+| P2 (ASCII PGM) | P1 (ASCII PBM) | Grayscale to black and white |
+| P6 (binary PPM) | P5 (binary PGM) | RGB to grayscale |
+| P5 (binary PGM) | P4 (binary PBM) | Grayscale to packed black and white |
 
-- **P6 → P5** : Color (binary) → Grayscale (binary)  
-- **P5 → P4** : Grayscale (binary) → Black & White (binary)  
-- **P3 → P2** : Color (ASCII) → Grayscale (ASCII)  
-- **P2 → P1** : Grayscale (ASCII) → Black & White (ASCII)  
+Grayscale is calculated using integer arithmetic:
 
-The conversion is automatically determined by the input file’s **magic number**.
+`gray = (299 * R + 587 * G + 114 * B) / 1000`
 
----
+Values are rounded down by integer division. Black-and-white conversion uses the threshold `(maxval + 1) / 2`: samples at or below that threshold become black (`1` in PBM), and larger samples become white (`0`).
 
-## ⚙️ Implementation Details
+## Build
 
-- **Language**: C (standard ANSI C)
-- **I/O**: Uses only `getchar()` and `putchar()` for reading/writing.
-- **Restrictions**:  
-  - No arrays (including strings)  
-  - No floating-point numbers  
-  - No `math.h` functions  
-  - No file handling functions (`fopen`, `fread`, etc.)  
-- **Conversion methods**:
-  - **Color → Grayscale**: Luminosity method  
-    \[
-    gray = \left\lfloor \frac{299R + 587G + 114B}{1000} \right\rfloor
-    \]
-  - **Grayscale → Black & White**: Threshold method  
-    \[
-    pixel = (value > \lfloor \tfrac{max+1}{2} \rfloor) ? 0 : 1
-    \]
-
----
-
-## 🚀 Usage
-
-Compile the program:
+Requires a C99-compatible compiler (for example, GCC):
 
 ```bash
-gcc figproc.c -o figproc
-````
+gcc -std=c99 -Wall -Wextra -Wpedantic -Wconversion figproc.c -o figproc
+```
 
-Run it with input/output redirection:
+## Usage
+
+Pass the source image via standard input and redirect the output to a file:
 
 ```bash
 ./figproc < input.ppm > output.pgm
 ./figproc < input.pgm > output.pbm
 ```
 
-Examples:
+For an ASCII example:
 
 ```bash
-./figproc < NIbin.ppm > NIbin.pgm
-./figproc < NIbin.pgm > NIbin.pbm
+printf 'P3\n2 1\n255\n255 0 0 0 255 0\n' | ./figproc
 ```
 
----
+Expected output:
 
-## 🔍 Testing & Tools
+```text
+P2
+2 1
+255
+76 149
+```
 
-To inspect binary-encoded files, you can use the `od` command on Unix-like systems:
+The converter uses standard input/output, so **binary outputs should be redirected to a file**, rather than displayed in a terminal. Diagnostics are written to standard error. An invalid or truncated input returns a nonzero exit status; because conversion is streamed, output may already have been partially written.
+
+## Input validation and limitations
+
+- Supports positive image dimensions and `maxval` in the range `1..65535` for ASCII P2/P3 input.
+- Supports **8-bit binary samples only** (`maxval` in `1..255`) for P5/P6. 16-bit binary samples are rejected.
+- Rejects unsupported input magic numbers, malformed or incomplete headers, integer-overflowing header values, truncated image data and sample values exceeding `maxval`.
+- Parses decimal samples and `#` comments in ASCII input.
+- Performs **single-image, streaming conversion**, reading only the declared number of pixels. Extra trailing data is not interpreted as another image.
+- It is not a general-purpose Netpbm library and does not implement every possible variant or extension.
+
+The implementation avoids floating-point arithmetic, `math.h` and file-opening APIs; it uses standard streams (`getchar`, `putchar`, `printf` and `fprintf`).
+
+## Tests
+
+The regression suite uses Python's standard `unittest` module (no third-party Python packages required):
 
 ```bash
-od -tx1c file.ppm
+python3 -m unittest discover -s tests -v
 ```
 
----
+The **28 regression tests** cover all four conversions, invalid headers, truncated data and out-of-range samples.
 
-## 📂 Example Conversions
+### Run with UndefinedBehaviorSanitizer
 
-* `P6 → P5`: color image to grayscale
-* `P5 → P4`: grayscale to black & white
-* `P3 → P2`: color (ASCII) to grayscale (ASCII)
-* `P2 → P1`: grayscale (ASCII) to black & white (ASCII)
+Build a UBSan-enabled executable:
 
----
+```bash
+mkdir -p build
+gcc -std=c99 -Wall -Wextra -Wpedantic -Wconversion \
+    -g -O1 -fno-omit-frame-pointer \
+    -fsanitize=undefined -fno-sanitize-recover=all \
+    figproc.c -o build/figproc_ubsan
+```
 
-## ✨ Bonus (optional extension)
+Use `FIGPROC_BINARY` to run the tests against that exact executable:
 
-As an extension, the program could also support conversions between **binary ↔ ASCII encodings** without changing the image type (e.g., `P6 ↔ P3`, `P5 ↔ P2`, `P4 ↔ P1`).
+```bash
+FIGPROC_BINARY="$PWD/build/figproc_ubsan" \
+UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 \
+python3 -m unittest discover -s tests -v
+```
 
----
+Passing tests does not guarantee the absence of vulnerabilities; sanitizer results apply to the exercised code paths.
 
-## 📖 Notes
+## Project background
 
-* The program strictly reads/writes image data — no extra output messages except in case of input errors (`Input error!`).
-* Developed and tested in a **Linux environment**.
+Originally a first-semester C programming exercise, this project has been revisited to improve its robustness and testability while preserving its small, stream-based design.
 
----
-
-## 👨‍💻 Author
-
-This project was originally developed during my **first semester at the university** as 
-part of the course *Introduction to Programming*.  
-It represents my first experience in C programming applied to a real-world problem: implementing 
-image processing directly on the **Netpbm format**.
-
-**MrPhoenix300**
+Author: [mrphoenix300](https://github.com/mrphoenix300)
