@@ -28,7 +28,6 @@ class P5ToP4Tests(unittest.TestCase):
             )
 
     @classmethod
-    @classmethod
     def tearDownClass(cls):
         if cls.temp is not None:
             cls.temp.cleanup()
@@ -51,6 +50,10 @@ class P5ToP4Tests(unittest.TestCase):
         result = self.convert(9, 2, [0] * 9 + [255] * 9)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout, b"P4\n9 2\n\xff\x80\x00\x00")
+
+    def test_sample_above_maxval_is_rejected(self):
+        result = self.convert(1, 1, [16], maxval=15)
+        self.assertNotEqual(result.returncode, 0)
 
     def test_truncated_input_fails(self):
         result = self.convert(2, 1, [0])
