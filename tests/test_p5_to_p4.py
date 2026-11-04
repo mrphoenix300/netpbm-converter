@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Regression tests for P5 (8-bit PGM) to P4 (packed PBM) conversion."""
+import os
 import pathlib
 import subprocess
 import tempfile
@@ -11,14 +12,26 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 class P5ToP4Tests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.temp = tempfile.TemporaryDirectory()
-        cls.binary = pathlib.Path(cls.temp.name) / "figproc"
-        subprocess.run(
-            ["cc", "-std=c99", "-Wall", "-Wextra", "-o", str(cls.binary), str(ROOT / "figproc.c")],
-            check=True,
-        )
+        configured = os.environ.get("FIGPROC_BINARY")
+        if configured:
+            cls.temp = None
+            cls.binary = pathlib.Path(configured).expanduser().resolve()
+            if not cls.binary.is_file():
+                raise FileNotFoundError(f"FIGPROC_BINARY not found: {cls.binary}")
+        else:
+            cls.temp = tempfile.TemporaryDirectory()
+            cls.binary = pathlib.Path(cls.temp.name) / "figproc"
+            subprocess.run(
+                ["cc", "-std=c99", "-Wall", "-Wextra", "-o",
+                 str(cls.binary), str(ROOT / "figproc.c")],
+                check=True,
+            )
 
     @classmethod
+    def tearDownClass(cls):
+        if cls.temp is not None:
+            cls.temp.cleanup()
+
     def tearDownClass(cls):
         cls.temp.cleanup()
 
