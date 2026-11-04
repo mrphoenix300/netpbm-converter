@@ -33,9 +33,6 @@ class P6ToP5Tests(unittest.TestCase):
         if cls.temp is not None:
             cls.temp.cleanup()
 
-    def tearDownClass(cls):
-        cls.temp.cleanup()
-
     def convert(self, width, height, pixels, maxval=255):
         header = f"P6\n{width} {height}\n{maxval}\n".encode("ascii")
         return subprocess.run(
