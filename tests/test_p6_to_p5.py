@@ -28,7 +28,6 @@ class P6ToP5Tests(unittest.TestCase):
             )
 
     @classmethod
-    @classmethod
     def tearDownClass(cls):
         if cls.temp is not None:
             cls.temp.cleanup()
@@ -59,6 +58,10 @@ class P6ToP5Tests(unittest.TestCase):
         result = self.convert(1, 1, [255, 255, 255, 0, 0, 0])
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout, b"P5\n1 1\n255\n" + bytes([255]))
+
+    def test_channel_above_maxval_is_rejected(self):
+        result = self.convert(1, 1, [0, 16, 0], maxval=15)
+        self.assertNotEqual(result.returncode, 0)
 
     def test_truncated_pixel(self):
         result = self.convert(1, 1, [255, 0])
