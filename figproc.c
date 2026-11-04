@@ -11,7 +11,8 @@ int header(int base);
 int main(void)
 {
 	int ch;
-    unsigned int luminosity,grey;
+    unsigned int luminosity;
+    int grey;
     int magic_number=0;
     unsigned int red,blue,green;
     int max_val;
