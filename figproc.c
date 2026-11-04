@@ -1,6 +1,7 @@
 /* figproc.c */
 #include <stdio.h>
 #include <ctype.h>
+#include <limits.h>
 
 #define ERROR -1
 
@@ -19,35 +20,38 @@ int main(void)
     unsigned int color;
     int i,j,height,width;
     
-    /* these commands display the header of the file */
-    putchar('P');
-    while (magic_number==0)
+    /* Validate the input header before writing any output. */
+    if (getchar()!='P')
     {
-    	if (getchar()=='P')
-    	{
-    	    magic_number=getchar();
-    	    putchar(magic_number-1);
-    	    putchar('\n');	
-		}
+        fprintf(stderr, "Invalid Netpbm magic number\n");
+        return 1;
     }
-	width=header(10);
-    while (width==-1)
-	    width=header(10);
-	printf("%d",width);
-    putchar(32);
-	height=header(10);
-	while (height==-1)
-	    height=header(10);
-	printf("%d",height);
-	putchar('\n');
-	max_val=header(10);
-	while (max_val==-1)
-	    max_val=header(10);
-	if (magic_number=='3' || magic_number=='6') 
-	{   
-	    printf("%d",max_val);
-	    putchar('\n');
-	}
+    magic_number=getchar();
+    if (magic_number!='2' && magic_number!='3' &&
+        magic_number!='5' && magic_number!='6')
+    {
+        fprintf(stderr, "Unsupported Netpbm format\n");
+        return 1;
+    }
+    width=header(10);
+    height=header(10);
+    max_val=header(10);
+    if (width<=0 || height<=0 || max_val<=0 || max_val>65535)
+    {
+        fprintf(stderr, "Invalid or incomplete Netpbm header\n");
+        return 1;
+    }
+    if ((magic_number=='5' || magic_number=='6') && max_val>255)
+    {
+        fprintf(stderr, "16-bit binary samples are not supported\n");
+        return 1;
+    }
+    putchar('P');
+    putchar(magic_number-1);
+    putchar('\n');
+    printf("%d %d\n",width,height);
+    if (magic_number=='3' || magic_number=='6')
+        printf("%d\n",max_val);
 	if (magic_number=='3')
 	{
 		/* converts a ppm (P3) to pgm (P2) file */
@@ -147,45 +151,48 @@ int main(void)
 	}
 }
 
-int getinteger(int base) 
+/* Parse an unsigned decimal token with whitespace and # comment support.
+ * Return ERROR on malformed input, EOF, or integer overflow. */
+int header(int base)
 {
-    char ch=getchar();
-    int val=0; 
-    while (ch==32 || ch==10 || ch==9)
+    int ch;
+    int val=0;
+    int digits=0;
+    if (base!=10)
+        return ERROR;
+    for (;;)
     {
-    	if (ch==10)
-    	    putchar(ch);
-    	ch=getchar();
-    }
-	while (ch!=32 && ch!=10 && ch!=9)    /* Read up to new line */
-	{
-        if (ch >= '0' && ch <= '0'+base-1)   /* Legal character? */
+        ch=getchar();
+        if (ch==EOF)
+            return ERROR;
+        if (ch=='#')
         {
-		    val = base*val + (ch-'0');      /* Update return value */
-            ch=getchar();
+            do { ch=getchar(); } while (ch!=EOF && ch!='\n');
+            if (ch==EOF)
+                return ERROR;
+            continue;
         }
-        else
-            return ERROR;                /* Illegal character read */
+        if (isspace((unsigned char)ch))
+            continue;
+        break;
     }
-    ungetc(ch, stdin);
+    while (ch>='0' && ch<='9')
+    {
+        int digit=ch-'0';
+        if (val>(INT_MAX-digit)/10)
+            return ERROR;
+        val=val*10+digit;
+        digits++;
+        ch=getchar();
+    }
+    if (!digits)
+        return ERROR;
+    if (ch!=EOF && !isspace((unsigned char)ch))
+        return ERROR;
     return val;
 }
 
-int header(int base)
+int getinteger(int base)
 {
-    char ch=getchar(); // get only one char and save for later use
-    int val=0; // 0 means not changed
-    if (ch=='#')
-    {
-    	while (ch!='\n')
-    	    ch=getchar();
-	}
-    while (ch>='0' && ch <= '0'+base-1) { // if "ch" is not a number, this loop will be skipped
-            val=base*val+(ch-'0');
-            ch=getchar(); // get a new char for next loop iteration and checking if it is digit
-    }
-    if (val==0) // val was not changed (ch was not a number)
-        return ERROR; // loop in "main" will be continued
-    else
-        return val; // val was changed, return it
+    return header(base);
 }
