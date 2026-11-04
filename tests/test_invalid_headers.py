@@ -37,9 +37,6 @@ class InvalidHeaderTests(unittest.TestCase):
         if cls.temp is not None:
             cls.temp.cleanup()
 
-    def tearDownClass(cls):
-        cls.temp.cleanup()
-
     def assert_rejected(self, data):
         try:
             result = subprocess.run(
