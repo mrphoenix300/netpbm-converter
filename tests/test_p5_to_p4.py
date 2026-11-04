@@ -33,9 +33,6 @@ class P5ToP4Tests(unittest.TestCase):
         if cls.temp is not None:
             cls.temp.cleanup()
 
-    def tearDownClass(cls):
-        cls.temp.cleanup()
-
     def convert(self, width, height, pixels, maxval=255):
         source = f"P5\n{width} {height}\n{maxval}\n".encode() + bytes(pixels)
         return subprocess.run([str(self.binary)], input=source, capture_output=True)
