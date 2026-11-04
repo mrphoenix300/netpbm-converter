@@ -91,7 +91,7 @@ int main(void)
 		 * Read exactly three bytes per pixel, without skipping any bytes. */
 		if (max_val > 255)
 		{
-			fprintf(stderr, "16-bit P6 samples are not supported\\n");
+			fprintf(stderr, "16-bit P6 samples are not supported\n");
 			return 1;
 		}
 		for (j=0; j<height; j++)
@@ -103,7 +103,7 @@ int main(void)
 				int b=getchar();
 				if (r==EOF || g==EOF || b==EOF)
 				{
-					fprintf(stderr, "Truncated P6 pixel data\\n");
+					fprintf(stderr, "Truncated P6 pixel data\n");
 					return 1;
 				}
 				luminosity=(299u*(unsigned int)r+587u*(unsigned int)g+
