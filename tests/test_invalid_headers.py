@@ -32,7 +32,6 @@ class InvalidHeaderTests(unittest.TestCase):
             )
 
     @classmethod
-    @classmethod
     def tearDownClass(cls):
         if cls.temp is not None:
             cls.temp.cleanup()
