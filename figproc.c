@@ -113,6 +113,11 @@ int main(void)
 					fprintf(stderr, "Truncated P6 pixel data\n");
 					return 1;
 				}
+				if (r>max_val || g>max_val || b>max_val)
+				{
+					fprintf(stderr, "P6 pixel sample exceeds max_val\n");
+					return 1;
+				}
 				luminosity=(299u*(unsigned int)r+587u*(unsigned int)g+
 				            114u*(unsigned int)b)/1000u;
 				putchar((int)luminosity);
@@ -137,6 +142,11 @@ int main(void)
 				if (sample==EOF)
 				{
 					fprintf(stderr, "Truncated P5 pixel data\n");
+					return 1;
+				}
+				if (sample>max_val)
+				{
+					fprintf(stderr, "P5 pixel sample exceeds max_val\n");
 					return 1;
 				}
 				color=(color<<1) | (sample<=(max_val+1)/2 ? 1u : 0u);
