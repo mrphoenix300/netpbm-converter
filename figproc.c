@@ -87,20 +87,30 @@ int main(void)
 	}
 	else if (magic_number=='6')
 	{
-		/* converts a ppm (P6) to pgm (P2) file */
-		ch=getchar();
-		while (ch!=EOF)
+		/* P6 (binary RGB) to P5 (binary grayscale).
+		 * Read exactly three bytes per pixel, without skipping any bytes. */
+		if (max_val > 255)
 		{
-			/* same with P3 but it is binary coding as opposed to P3 which is a text format */
-			red=getchar();
-			green=getchar();
-			blue=getchar();
-			luminosity=(299*red+587*green+114*blue)/1000;
-			putchar(luminosity);
-			ch=getchar();
-			if (ch!=EOF)
-				ungetc(ch, stdin);
-		} 
+			fprintf(stderr, "16-bit P6 samples are not supported\\n");
+			return 1;
+		}
+		for (j=0; j<height; j++)
+		{
+			for (i=0; i<width; i++)
+			{
+				int r=getchar();
+				int g=getchar();
+				int b=getchar();
+				if (r==EOF || g==EOF || b==EOF)
+				{
+					fprintf(stderr, "Truncated P6 pixel data\\n");
+					return 1;
+				}
+				luminosity=(299u*(unsigned int)r+587u*(unsigned int)g+
+				            114u*(unsigned int)b)/1000u;
+				putchar((int)luminosity);
+			}
+		}
 	}
 	else if (magic_number=='5')
 	{
