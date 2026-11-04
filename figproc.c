@@ -51,7 +51,9 @@ int main(void)
     putchar('\n');
     printf("%d %d\n",width,height);
     if (magic_number=='3' || magic_number=='6')
+    {
         printf("%d\n",max_val);
+    }
 	if (magic_number=='3')
 	{
 		/* converts a ppm (P3) to pgm (P2) file */
