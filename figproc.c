@@ -10,11 +10,12 @@ int header(int base);
 
 int main(void)
 {
-	unsigned int ch,bit;
+	int ch;
     unsigned int luminosity,grey;
     int magic_number=0;
     unsigned int red,blue,green;
-    unsigned int max_val,color;
+    int max_val;
+    unsigned int color;
     int i,j,height,width;
     
     /* these commands display the header of the file */
